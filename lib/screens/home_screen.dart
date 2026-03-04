@@ -6,6 +6,9 @@ import '../services/sos_alarm_service.dart';
 import '../widgets/custom_scaffold.dart';
 import '../constants.dart';
 import 'contacts_page.dart';
+import 'live_map_screen.dart';
+import 'start_journey_screen.dart';
+import '../services/journey_service.dart';
 
 import 'settings_screen.dart';
 
@@ -20,7 +23,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final SosService _sosService = SosService();
   final ContactService _contactService = ContactService();
   final SosAlarmService _sosAlarmService = SosAlarmService(); // NEW
-  bool _isTracking = false;
+
+  // bool _isTracking = false; // logic moved to LiveMapScreen session
   bool _isSendingSOS = false;
   bool _isAlarmPlaying = false; // NEW
 
@@ -61,6 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       // 2. Send SOS
+      if (!mounted) return;
       await _sosService.sendSOS(contacts, context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -121,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         'You are protected.',
                         style: TextStyle(
-                          color: kTextColor.withOpacity(0.7),
+                          color: kTextColor.withValues(alpha: 0.7),
                           fontSize: 14,
                         ),
                       ),
@@ -139,14 +144,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: 180,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: kPrimaryColor.withOpacity(0.1),
+                    color: kPrimaryColor.withValues(alpha: 0.1),
                     border: Border.all(
-                      color: kPrimaryColor.withOpacity(0.5),
+                      color: kPrimaryColor.withValues(alpha: 0.5),
                       width: 2,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: kPrimaryColor.withOpacity(0.2),
+                        color: kPrimaryColor.withValues(alpha: 0.2),
                         blurRadius: 20,
                         spreadRadius: 5,
                       ),
@@ -232,20 +237,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Expanded(
                     child: _actionCard(
-                      title: _isTracking ? 'Stop Journey' : 'Start Journey',
-                      icon: _isTracking
-                          ? Icons.stop_circle_outlined
-                          : Icons.navigation_outlined,
-                      color: _isTracking ? Colors.redAccent : kAccentColor,
+                      title: 'Start Journey',
+                      icon: Icons.navigation_outlined,
+                      color: kAccentColor,
                       onTap: () {
-                        setState(() {
-                          _isTracking = !_isTracking;
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              _isTracking ? "Journey Started" : "Journey Ended",
-                            ),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const StartJourneyScreen(),
                           ),
                         );
                       },
@@ -257,12 +256,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: 'Live Map',
                       icon: Icons.map_outlined,
                       color: Colors.purpleAccent,
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Map Feature Coming Soon"),
-                          ),
-                        );
+                      onTap: () async {
+                        final journeyService = JourneyService();
+                        final journeyId = await journeyService
+                            .getActiveJourneyId();
+
+                        if (context.mounted) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  LiveMapScreen(isJourney: journeyId != null),
+                            ),
+                          );
+                        }
                       },
                     ),
                   ),

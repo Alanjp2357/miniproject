@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'fcm_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -30,6 +31,9 @@ class AuthService {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
+      // Save FCM Token
+      await FcmService().setupToken(result.user!.uid);
+
       return result.user;
     } on FirebaseAuthException catch (e) {
       String message;
@@ -44,9 +48,11 @@ class AuthService {
         message = e.message ?? 'Sign up failed';
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      }
 
       return null;
     }
@@ -87,11 +93,18 @@ class AuthService {
         password: password,
       );
 
+      // Save FCM Token
+      if (result.user != null) {
+        await FcmService().setupToken(result.user!.uid);
+      }
+
       return result.user;
     } on FirebaseAuthException catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message ?? 'Login failed')));
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message ?? 'Login failed')));
+      }
       return null;
     }
   }

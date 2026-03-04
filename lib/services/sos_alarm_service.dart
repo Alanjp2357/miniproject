@@ -1,4 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 
 class SosAlarmService {
   final AudioPlayer _player = AudioPlayer();
@@ -21,7 +22,7 @@ class SosAlarmService {
       await _player.resume();
       _isPlaying = true;
     } catch (e) {
-      print("Error playing alarm: $e");
+      debugPrint("Error playing alarm: $e");
     }
   }
 
@@ -32,7 +33,7 @@ class SosAlarmService {
       await _player.stop();
       _isPlaying = false;
     } catch (e) {
-      print("Error stopping alarm: $e");
+      debugPrint("Error stopping alarm: $e");
     }
   }
 }

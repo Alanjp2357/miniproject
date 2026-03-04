@@ -229,7 +229,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               child: OutlinedButton.icon(
                                 onPressed: () async {
                                   await _auth.signOut();
-                                  if (mounted) {
+                                  if (context.mounted) {
                                     Navigator.of(
                                       context,
                                       rootNavigator: true,

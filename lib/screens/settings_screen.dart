@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/custom_scaffold.dart';
 import '../constants.dart';
 import 'profile_page.dart';
+import 'guardian_tracking_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -92,7 +93,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   );
                 },
-                activeColor: kPrimaryColor,
+                activeThumbColor: kPrimaryColor,
               ),
             ),
 
@@ -119,6 +120,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ],
                   ),
                 );
+              },
+            ),
+
+            const SizedBox(height: 15),
+
+            // Debug: Track Self
+            _buildSettingsTile(
+              icon: Icons.bug_report,
+              title: 'Debug: Track Myself',
+              subtitle: 'View your own live location as a guardian',
+              onTap: () {
+                final user = FirebaseAuth.instance.currentUser;
+                if (user != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          GuardianTrackingScreen(userId: user.uid),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Not logged in")),
+                  );
+                }
               },
             ),
 

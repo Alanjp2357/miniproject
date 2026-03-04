@@ -170,6 +170,11 @@ class _ContactsPageState extends State<ContactsPage> {
   @override
   Widget build(BuildContext context) {
     return CustomScaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddContactDialog,
+        backgroundColor: kPrimaryColor,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
       child: SafeArea(
         // Ensures content respects notches and system bars
         child: Column(
@@ -235,7 +240,7 @@ class _ContactsPageState extends State<ContactsPage> {
                           Icon(
                             Icons.group_off,
                             size: 60,
-                            color: kHintColor.withOpacity(0.3),
+                            color: kHintColor.withValues(alpha: 0.3),
                           ),
                           const SizedBox(height: 10),
                           const Text(
@@ -264,7 +269,9 @@ class _ContactsPageState extends State<ContactsPage> {
                         ),
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: kPrimaryColor.withOpacity(0.2),
+                            backgroundColor: kPrimaryColor.withValues(
+                              alpha: 0.2,
+                            ),
                             child: const Icon(
                               Icons.person,
                               color: kPrimaryColor,
@@ -308,11 +315,6 @@ class _ContactsPageState extends State<ContactsPage> {
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddContactDialog,
-        backgroundColor: kPrimaryColor,
-        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

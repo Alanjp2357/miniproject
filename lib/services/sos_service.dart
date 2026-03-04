@@ -24,7 +24,7 @@ class SosService {
 
     if (position != null) {
       mapLink =
-          "https://www.google.com/maps/search/?api=1&query=${position.latitude},${position.longitude}";
+          "https://www.openstreetmap.org/?mlat=${position.latitude}&mlon=${position.longitude}#map=15/${position.latitude}/${position.longitude}";
       message += "Here is my location: $mapLink";
     } else {
       message += "I am unable to fetch my location.";

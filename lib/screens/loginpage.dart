@@ -71,6 +71,7 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     // signIn now handles both email and mobile number
+    if (!mounted) return;
     final user = await _authService.signIn(
       _emailController.text.trim(),
       _passwordController.text.trim(),
@@ -175,7 +176,7 @@ class _LoginPageState extends State<LoginPage> {
                         child: Text(
                           'Forgot Password?',
                           style: TextStyle(
-                            color: kPrimaryColor.withOpacity(0.8),
+                            color: kPrimaryColor.withValues(alpha: 0.8),
                             fontSize: 12,
                           ),
                         ),
@@ -225,7 +226,9 @@ class _LoginPageState extends State<LoginPage> {
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Text(
                           "OR",
-                          style: TextStyle(color: kHintColor.withOpacity(0.5)),
+                          style: TextStyle(
+                            color: kHintColor.withValues(alpha: 0.5),
+                          ),
                         ),
                       ),
                       const Expanded(child: Divider(color: kInactiveCardColor)),
