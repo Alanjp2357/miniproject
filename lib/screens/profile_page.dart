@@ -21,6 +21,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController _emailController = TextEditingController();
 
   bool _isLoading = false;
+  bool _isEditing = false;
 
   @override
   void initState() {
@@ -81,7 +82,9 @@ class _ProfilePageState extends State<ProfilePage> {
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.pop(context);
+          setState(() {
+            _isEditing = false;
+          });
         }
       }
     } catch (e) {
@@ -104,19 +107,37 @@ class _ProfilePageState extends State<ProfilePage> {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: kTextColor),
-                    onPressed: () => Navigator.pop(context),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back, color: kTextColor),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'My Profile',
+                        style: TextStyle(
+                          color: kTextColor,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'My Profile',
-                    style: TextStyle(
-                      color: kTextColor,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                  // Edit Button
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _isEditing = !_isEditing;
+                      });
+                    },
+                    icon: Icon(
+                      _isEditing ? Icons.close : Icons.edit,
+                      color: kPrimaryColor,
                     ),
+                    tooltip: _isEditing ? 'Cancel Edit' : 'Edit Profile',
                   ),
                 ],
               ),
@@ -145,6 +166,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             hint: "Full Name",
                             icon: Icons.person_outline,
                             controller: _nameController,
+                            readOnly: !_isEditing,
                           ),
                           const SizedBox(height: 20),
                           CustomTextField(
@@ -152,9 +174,10 @@ class _ProfilePageState extends State<ProfilePage> {
                             icon: Icons.phone_android,
                             controller: _mobileController,
                             keyboardType: TextInputType.phone,
+                            readOnly: !_isEditing,
                           ),
                           const SizedBox(height: 20),
-                          // Read-only Email
+                          // Email is always read-only (identity)
                           TextField(
                             controller: _emailController,
                             readOnly: true,
@@ -173,58 +196,65 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                           ),
                           const SizedBox(height: 40),
-                          SizedBox(
-                            width: double.infinity,
-                            height: 55,
-                            child: ElevatedButton(
-                              onPressed: _updateProfile,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: kPrimaryColor,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15),
+
+                          // Save Button (Only visible in Edit Mode)
+                          if (_isEditing)
+                            SizedBox(
+                              width: double.infinity,
+                              height: 55,
+                              child: ElevatedButton(
+                                onPressed: _updateProfile,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: kPrimaryColor,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
                                 ),
-                              ),
-                              child: const Text(
-                                'Save Changes',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                                child: const Text(
+                                  'Save Changes',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+
                           const SizedBox(height: 20),
-                          SizedBox(
-                            width: double.infinity,
-                            height: 55,
-                            child: OutlinedButton.icon(
-                              onPressed: () async {
-                                await _auth.signOut();
-                                if (mounted) {
-                                  Navigator.of(
-                                    context,
-                                    rootNavigator: true,
-                                  ).popUntil((route) => route.isFirst);
-                                }
-                              },
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.redAccent,
-                                side: const BorderSide(color: Colors.redAccent),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15),
+                          if (!_isEditing)
+                            SizedBox(
+                              width: double.infinity,
+                              height: 55,
+                              child: OutlinedButton.icon(
+                                onPressed: () async {
+                                  await _auth.signOut();
+                                  if (mounted) {
+                                    Navigator.of(
+                                      context,
+                                      rootNavigator: true,
+                                    ).popUntil((route) => route.isFirst);
+                                  }
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.redAccent,
+                                  side: const BorderSide(
+                                    color: Colors.redAccent,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
                                 ),
-                              ),
-                              icon: const Icon(Icons.logout),
-                              label: const Text(
-                                'Log Out',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                                icon: const Icon(Icons.logout),
+                                label: const Text(
+                                  'Log Out',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
                         ],
                       ),
                     ),

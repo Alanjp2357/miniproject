@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../services/sos_service.dart';
 import '../services/contact_service.dart';
+import '../services/sos_alarm_service.dart';
 import '../widgets/custom_scaffold.dart';
 import '../constants.dart';
 import 'contacts_page.dart';
-import 'profile_page.dart';
+
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,12 +19,20 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final SosService _sosService = SosService();
   final ContactService _contactService = ContactService();
+  final SosAlarmService _sosAlarmService = SosAlarmService(); // NEW
   bool _isTracking = false;
   bool _isSendingSOS = false;
+  bool _isAlarmPlaying = false; // NEW
 
   Future<void> _sendSOS() async {
     setState(() {
       _isSendingSOS = true;
+    });
+
+    // Start Alarm Immediately
+    await _sosAlarmService.startAlarm();
+    setState(() {
+      _isAlarmPlaying = true;
     });
 
     try {
@@ -51,11 +61,13 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       // 2. Send SOS
-      await _sosService.sendSOS(contacts);
+      await _sosService.sendSOS(contacts, context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("SOS Alert Sent!"),
+          SnackBar(
+            content: Text(
+              "High Risk Alert Saved & SMS Sent to ${contacts.length} Contacts!",
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -73,6 +85,13 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     }
+  }
+
+  void _stopAlarm() async {
+    await _sosAlarmService.stopAlarm();
+    setState(() {
+      _isAlarmPlaying = false;
+    });
   }
 
   @override
@@ -104,29 +123,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: TextStyle(
                           color: kTextColor.withOpacity(0.7),
                           fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ProfilePage(),
-                            ),
-                          );
-                        },
-                        icon: const CircleAvatar(
-                          radius: 22,
-                          backgroundColor: kCardColor,
-                          child: Icon(
-                            Icons.person,
-                            color: kTextColor,
-                            size: 24,
-                          ),
                         ),
                       ),
                     ],
@@ -196,6 +192,34 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
+              // Stop Alarm Button (Visible ONLY when alarm is playing)
+              if (_isAlarmPlaying)
+                Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton.icon(
+                      onPressed: _stopAlarm,
+                      icon: const Icon(Icons.volume_off),
+                      label: const Text(
+                        "STOP ALARM",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black87,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
               const SizedBox(height: 10),
               const Text(
                 'Tap for Emergency Help',
@@ -269,9 +293,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       icon: Icons.settings_outlined,
                       color: Colors.blueGrey,
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Settings Feature Coming Soon"),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsScreen(),
                           ),
                         );
                       },
