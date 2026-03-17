@@ -105,29 +105,28 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
               });
 
               // Fetch Route
-              final currentLat = data['currentLat'] as double?;
-              final currentLng = data['currentLng'] as double?;
-              final destLat = data['destinationLat'] as double?;
-              final destLng = data['destinationLng'] as double?;
+              final currentLat = (data['currentLat'] as num?)?.toDouble();
+              final currentLng = (data['currentLng'] as num?)?.toDouble();
+              final destLat = (data['destinationLat'] as num?)?.toDouble();
+              final destLng = (data['destinationLng'] as num?)?.toDouble();
 
               if (currentLat != null && currentLng != null && destLat != null && destLng != null) {
                 bool shouldFetchRoute = false;
                 
+                // CRITICAL FIX: If route is empty, ALWAYS try to fetch.
+                // Otherwise check distance from LAST FETCH position.
                 if (_routePoints.isEmpty) {
                   shouldFetchRoute = true;
                 } else if (prevData != null) {
-                  final prevLat = prevData['currentLat'] as double?;
-                  final prevLng = prevData['currentLng'] as double?;
+                  final prevLat = (prevData['currentLat'] as num?)?.toDouble();
+                  final prevLng = (prevData['currentLng'] as num?)?.toDouble();
                   
                   if (prevLat != null && prevLng != null) {
-                    // Simple distance check: ~100 meters (approx 0.001 degrees)
                     final double latDiff = (currentLat - prevLat).abs();
                     final double lngDiff = (currentLng - prevLng).abs();
-                    if (latDiff > 0.001 || lngDiff > 0.001) {
+                    if (latDiff > 0.0003 || lngDiff > 0.0003) {
                       shouldFetchRoute = true;
                     }
-                  } else {
-                    shouldFetchRoute = true;
                   }
                 }
 
@@ -283,6 +282,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                           points: [currentLatLng, destLatLng],
                           color: kAccentColor.withValues(alpha: 0.5),
                           width: 4,
+                          patterns: [PatternItem.dash(10), PatternItem.gap(10)],
                         ),
                       }
                     : {},
@@ -309,185 +309,280 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
             },
           ),
 
-          // Top Info Box Inside Stack (Risk Analysis)
+          // Top Info Box Inside Stack (Risk Analysis) - Professional Glassmorphism
           Positioned(
             top: 20,
-            left: 20,
-            right: 20,
+            left: 15,
+            right: 15,
             child: SafeArea(
-              child: Container(
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.95),
-                  borderRadius: BorderRadius.circular(15),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black12, blurRadius: 10),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: riskColor.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: kCardColor.withValues(alpha: 0.85),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: riskColor.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              isOwner ? Icons.shield_outlined : Icons.visibility_outlined,
+                              color: riskColor,
+                              size: 22,
+                            ),
                           ),
-                          child: Icon(
-                            isOwner ? Icons.security : Icons.visibility,
-                            color: riskColor,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                isOwner ? "Your Journey Status" : "Friend's Progress",
-                                style: const TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 12,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  isOwner ? "TRACKING ACTIVE" : "FRIEND'S JOURNEY",
+                                  style: TextStyle(
+                                    color: riskColor.withValues(alpha: 0.8),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1.2,
+                                  ),
                                 ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  destinationName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: kTextColor,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: riskColor.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: riskColor.withValues(alpha: 0.5)),
+                            ),
+                            child: Text(
+                              riskTitle.toUpperCase(),
+                              style: TextStyle(
+                                color: riskColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                letterSpacing: 0.5,
                               ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Divider(color: Colors.white10, height: 1),
+                      ),
+                      Row(
+                        children: [
+                          Icon(Icons.insights_outlined, size: 16, color: kAccentColor.withValues(alpha: 0.7)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              riskDesc,
+                              style: const TextStyle(color: kHintColor, fontSize: 13),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.sync, size: 12, color: kHintColor),
+                              const SizedBox(width: 4),
                               Text(
-                                "To: $destinationName",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                                overflow: TextOverflow.ellipsis,
+                                "Live update: ${lastUpdated != null ? "${lastUpdated.toDate().hour.toString().padLeft(2, '0')}:${lastUpdated.toDate().minute.toString().padLeft(2, '0')}" : "In sync"}",
+                                style: const TextStyle(fontSize: 11, color: kHintColor),
                               ),
                             ],
                           ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: riskColor,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            riskTitle,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                          if (!isOwner)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                "LIVE",
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.redAccent,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Divider(height: 20),
-                    Row(
-                      children: [
-                        const Icon(Icons.analytics_outlined, size: 16, color: Colors.blue),
-                        const SizedBox(width: 8),
-                        const Text(
-                          "Risk Analysis:",
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            riskDesc,
-                            style: const TextStyle(fontSize: 13),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Last sync: ${lastUpdated != null ? "${lastUpdated.toDate().hour.toString().padLeft(2, '0')}:${lastUpdated.toDate().minute.toString().padLeft(2, '0')}" : "Pending..."}",
-                          style: const TextStyle(fontSize: 11, color: Colors.grey),
-                        ),
-                        if (!isOwner)
-                          const Text(
-                            "LIVE DATA",
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.red,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
 
-          // Role-specific Action Buttons
+          // Role-specific Action Buttons - Sleek & Professional
           Positioned(
             bottom: 30,
             left: 20,
-            child: isOwner
-                ? Row(
-                    children: [
-                      FloatingActionButton.extended(
+            right: 20,
+            child: Row(
+              children: [
+                if (isOwner) ...[
+                  Expanded(
+                    flex: 3,
+                    child: Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.green.withValues(alpha: 0.2),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton.icon(
                         onPressed: () async {
                           await _journeyService.stopJourney();
                           if (mounted) Navigator.pop(context);
                         },
-                        heroTag: 'end_journey',
-                        backgroundColor: Colors.green,
-                        icon: const Icon(Icons.check, color: Colors.white),
-                        label: const Text("I'M SAFE", style: TextStyle(color: Colors.white)),
+                        icon: const Icon(Icons.verified_user_outlined, color: Colors.white, size: 20),
+                        label: const Text(
+                          "I'M SAFE",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade600,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          elevation: 0,
+                        ),
                       ),
-                      const SizedBox(width: 10),
-                      FloatingActionButton(
-                        onPressed: () {
-                          final phoneNumbers = _journeyData!['guardianPhone'] != null
-                              ? [_journeyData!['guardianPhone'] as String]
-                              : <String>[];
-                          _sosService.sendSOS(phoneNumbers, context);
-                        },
-                        heroTag: 'sos_journey',
-                        backgroundColor: Colors.red,
-                        child: const Icon(Icons.emergency, color: Colors.white),
-                      ),
-                    ],
-                  )
-                : FloatingActionButton.extended(
-                    onPressed: () {
-                      final phone = _journeyData!['userPhone'] as String?;
-                      if (phone != null && phone.isNotEmpty) {
-                        _sosService.initiateCall(phone);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Phone number not available")),
-                        );
-                      }
-                    },
-                    backgroundColor: Colors.blue,
-                    icon: const Icon(Icons.phone, color: Colors.white),
-                    label: const Text("CALL FRIEND", style: TextStyle(color: Colors.white)),
+                    ),
                   ),
-          ),
-
-          // Recenter Button
-          Positioned(
-            bottom: 30,
-            right: 20,
-            child: FloatingActionButton(
-              onPressed: () {
-                setState(() {
-                  _isFollowingUser = true;
-                });
-                _mapController?.animateCamera(CameraUpdate.newLatLngZoom(currentLatLng, 15.0));
-              },
-              backgroundColor: _isFollowingUser ? kPrimaryColor : Colors.grey,
-              child: const Icon(Icons.my_location, color: Colors.white),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () {
+                      final phoneNumbers = _journeyData!['guardianPhone'] != null
+                          ? [_journeyData!['guardianPhone'] as String]
+                          : <String>[];
+                      _sosService.sendSOS(phoneNumbers, context);
+                    },
+                    child: Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFF44336), Color(0xFFB71C1C)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.red.withValues(alpha: 0.4),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.emergency_outlined, color: Colors.white, size: 28),
+                    ),
+                  ),
+                ] else
+                  Expanded(
+                    child: Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blue.withValues(alpha: 0.2),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          final phone = _journeyData!['userPhone'] as String?;
+                          if (phone != null && phone.isNotEmpty) {
+                            _sosService.initiateCall(phone);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Phone number not available")),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.phone_in_talk_outlined, color: Colors.white),
+                        label: const Text(
+                          "CALL FRIEND",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.shade600,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                  ),
+                const SizedBox(width: 12),
+                // Compact Recenter
+                GestureDetector(
+                  onTap: () {
+                    setState(() => _isFollowingUser = true);
+                    _mapController?.animateCamera(CameraUpdate.newLatLngZoom(currentLatLng, 15.0));
+                  },
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: _isFollowingUser ? kPrimaryColor : kCardColor,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: _isFollowingUser ? Colors.transparent : Colors.white12,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.center_focus_strong_outlined,
+                      color: _isFollowingUser ? Colors.white : kHintColor,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -497,11 +592,19 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
 
   PreferredSizeWidget _buildAppBar(bool isOwner) {
     return AppBar(
-      title: Text(isOwner ? "My Journey" : "Tracking Friend"),
-      backgroundColor: Colors.white,
+      title: Text(
+        (isOwner ? "My Journey" : "Tracking Friend").toUpperCase(),
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 2,
+        ),
+      ),
+      backgroundColor: kBackgroundColor,
       foregroundColor: kTextColor,
       elevation: 0,
       centerTitle: true,
+      leading: const BackButton(color: kTextColor),
     );
   }
 }

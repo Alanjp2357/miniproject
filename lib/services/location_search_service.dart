@@ -16,16 +16,16 @@ class LocationSearchService {
     try {
       String biasing = '';
       if (lat != null && lng != null) {
-        // location and radius provide stronger biasing than locationbias alone
-        biasing = '&location=$lat,$lng&radius=50000&locationbias=circle:50000@$lat,$lng';
+        // Soft biasing like Google Maps: prioritizes results in 50km but allows others.
+        biasing = '&locationbias=circle:50000@$lat,$lng';
       }
       
-      // Add country restriction to India for more relevant local results
-      final String countryFilter = '&components=country:in';
+      // Keep country restriction but remove strictbounds to allow "wider" search.
+      final String constraints = '&components=country:in&region=in&language=en';
 
       final response = await http.get(
         Uri.parse(
-          '$_autocompleteUrl?input=${Uri.encodeComponent(query)}$biasing$countryFilter&key=$kGoogleMapsApiKey',
+          '$_autocompleteUrl?input=${Uri.encodeComponent(query)}$biasing$constraints&key=$kGoogleMapsApiKey',
         ),
       );
 
@@ -33,7 +33,7 @@ class LocationSearchService {
         final data = json.decode(response.body);
         if (data['status'] == 'OK') {
           final List<dynamic> predictions = data['predictions'];
-          return predictions
+          final List<Map<String, dynamic>> results = predictions
               .map(
                 (item) => {
                   'name': item['description'] as String,
@@ -42,6 +42,20 @@ class LocationSearchService {
                 },
               )
               .toList();
+              
+          // Custom Sort: Prioritize Kerala results
+          results.sort((a, b) {
+            final aName = a['name'].toString().toLowerCase();
+            final bName = b['name'].toString().toLowerCase();
+            final aIsKerala = aName.contains('kerala') || aName.contains(', kl');
+            final bIsKerala = bName.contains('kerala') || bName.contains(', kl');
+            
+            if (aIsKerala && !bIsKerala) return -1;
+            if (!aIsKerala && bIsKerala) return 1;
+            return 0;
+          });
+          
+          return results;
         } else {
           debugPrint('Google Places API Error (Status: ${data['status']}). Falling back to OSM.');
         }
@@ -50,10 +64,10 @@ class LocationSearchService {
       debugPrint('Google Places Search Failed: $e. Falling back to OSM.');
     }
 
-    // 2. Fallback to OpenStreetMap (Nominatim)
+    // 2. Fallback to OpenStreetMap (Nominatim) - Restricted to India
     try {
       final response = await http.get(
-        Uri.parse('$_osmUrl?q=${Uri.encodeComponent(query)}&format=json&limit=5'),
+        Uri.parse('$_osmUrl?q=${Uri.encodeComponent(query)}&format=json&limit=5&countrycodes=in'),
         headers: {'User-Agent': 'SafeNightApp/1.0'},
       );
 

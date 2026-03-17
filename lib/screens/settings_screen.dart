@@ -128,8 +128,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             // Debug: Track Self
             _buildSettingsTile(
               icon: Icons.bug_report,
-              title: 'Debug: Track Myself',
-              subtitle: 'View your own live location as a guardian',
+              title: 'Guardian View (Test)',
+              subtitle: 'Simulate what a guardian sees during your journey',
               onTap: () {
                 final user = FirebaseAuth.instance.currentUser;
                 if (user != null) {

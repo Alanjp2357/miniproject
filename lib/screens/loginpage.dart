@@ -109,10 +109,10 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               const SizedBox(height: 60),
               // Logo / Branding
-              const Icon(Icons.shield_moon, color: kPrimaryColor, size: 80),
+              Image.asset('assets/logo.png', height: 100),
               const SizedBox(height: 15),
               const Text(
-                'Safe Night',
+                'SafeTrack',
                 style: TextStyle(
                   fontSize: 32.0,
                   fontWeight: FontWeight.bold,
@@ -218,42 +218,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 40.0),
 
-                  // Social Login Section
-                  Row(
-                    children: [
-                      const Expanded(child: Divider(color: kInactiveCardColor)),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Text(
-                          "OR",
-                          style: TextStyle(
-                            color: kHintColor.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ),
-                      const Expanded(child: Divider(color: kInactiveCardColor)),
-                    ],
-                  ),
-                  const SizedBox(height: 20.0),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _socialIcon(Icons.g_mobiledata, () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Google Sign In coming soon"),
-                          ),
-                        );
-                      }),
-                      _socialIcon(Icons.facebook, () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Facebook Sign In coming soon"),
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
                   const SizedBox(height: 40.0),
 
                   // Sign Up Link
@@ -294,18 +258,4 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _socialIcon(IconData icon, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: kCardColor,
-          border: Border.all(color: kInactiveCardColor),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, color: kTextColor, size: 30),
-      ),
-    );
-  }
 }

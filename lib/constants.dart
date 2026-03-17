@@ -10,3 +10,4 @@ const Color kTextColor = Colors.white;
 const Color kHintColor = Color(0xFF8D8E98); // Blue-Grey for hints
 const Color kInputColor = Color(0xFF1D1E33);
 const String kGoogleMapsApiKey = 'AIzaSyB7L9NMxRT8dxS1ChKYnlFhHXMS9d7KbKA';
+const String kOrsApiKey = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjQ0YjY5NzU1NzBiNjQ1Y2I5NmY2MTJmMjg0NWQyNzI4IiwiaCI6Im11cm11cjY0In0=';

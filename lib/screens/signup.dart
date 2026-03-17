@@ -95,14 +95,10 @@ class _SignupPageState extends State<SignupPage> {
             children: [
               const SizedBox(height: 50),
               // Header
-              const Icon(
-                Icons.person_add_alt_1,
-                color: kPrimaryColor,
-                size: 60,
-              ),
+              Image.asset('assets/logo.png', height: 80),
               const SizedBox(height: 10),
               const Text(
-                'Join Safe Night',
+                'Join SafeTrack',
                 style: TextStyle(
                   fontSize: 28.0,
                   fontWeight: FontWeight.bold,

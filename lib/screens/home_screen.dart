@@ -225,29 +225,10 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               const SizedBox(height: 20),
               // Header: User Greeting & Battery
-              Row(
+              const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Hello, User 👋',
-                        style: TextStyle(
-                          color: kTextColor,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'You are protected.',
-                        style: TextStyle(
-                          color: kTextColor.withValues(alpha: 0.7),
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
+                  SizedBox.shrink(),
                 ],
               ),
               const SizedBox(height: 30),

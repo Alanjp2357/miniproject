@@ -5,58 +5,43 @@ import 'package:flutter/foundation.dart';
 import '../constants.dart';
 
 class RouteService {
-  final String _directionsUrl = 'https://maps.googleapis.com/maps/api/directions/json';
+  final String _orsUrl = 'https://api.openrouteservice.org/v2/directions';
 
-  Future<List<LatLng>> getRoute(LatLng origin, LatLng destination) async {
+  Future<List<LatLng>> getRoute(LatLng origin, LatLng destination, {String mode = 'driving-car'}) async {
     try {
+      // OpenRouteService expects mode like 'driving-car' or 'foot-walking'
+      // We'll map 'driving' to 'driving-car' and 'walking' to 'foot-walking'
+      String profile = mode == 'walking' ? 'foot-walking' : 'driving-car';
+
       final response = await http.get(
         Uri.parse(
-          '$_directionsUrl?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}&key=$kGoogleMapsApiKey',
+          '$_orsUrl/$profile?api_key=$kOrsApiKey&start=${origin.longitude},${origin.latitude}&end=${destination.longitude},${destination.latitude}',
         ),
       );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data['status'] == 'OK') {
-          final points = data['routes'][0]['overview_polyline']['points'];
-          return _decodePolyline(points);
+        if (data.containsKey('features') && data['features'].isNotEmpty) {
+          final List<dynamic> coords = data['features'][0]['geometry']['coordinates'];
+          
+          // ORS returns points as [longitude, latitude]
+          return coords.map((c) => LatLng(c[1].toDouble(), c[0].toDouble())).toList();
         } else {
-          debugPrint('Directions API Error: ${data['status']} - ${data['error_message'] ?? 'No extra message'}');
+          debugPrint('OpenRouteService Error ($profile): No features found in response.');
+        }
+      } else {
+        final error = json.decode(response.body);
+        debugPrint('OpenRouteService Error ($profile): Status ${response.statusCode} - ${error['error'] ?? 'Unknown error'}');
+        
+        // Fallback to walking if driving fails
+        if (profile == 'driving-car') {
+          debugPrint('Driving failed. Retrying with foot-walking mode...');
+          return getRoute(origin, destination, mode: 'walking');
         }
       }
     } catch (e) {
-      debugPrint('Error fetching route: $e');
+      debugPrint('Error fetching route from ORS ($mode): $e');
     }
     return [];
-  }
-
-  List<LatLng> _decodePolyline(String encoded) {
-    List<LatLng> points = [];
-    int index = 0, len = encoded.length;
-    int lat = 0, lng = 0;
-
-    while (index < len) {
-      int b, shift = 0, result = 0;
-      do {
-        b = encoded.codeUnitAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-      int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
-      lat += dlat;
-
-      shift = 0;
-      result = 0;
-      do {
-        b = encoded.codeUnitAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-      int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
-      lng += dlng;
-
-      points.add(LatLng(lat / 1e5, lng / 1e5));
-    }
-    return points;
   }
 }
